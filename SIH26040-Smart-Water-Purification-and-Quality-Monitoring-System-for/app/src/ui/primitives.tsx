@@ -39,7 +39,7 @@ export function Value({
               : color === "secondary"
                 ? "text-secondary"
                 : "text-primary";
-  return <span className={`font-mono ${c} ${className}`}>{children}</span>;
+  return <span className={`font-mono transition-colors duration-200 ease-out ${c} ${className}`}>{children}</span>;
 }
 
 export function statusColor(status: "OK" | "WARN" | "FAIL" | "STALE" | "MISSING" | string) {
@@ -65,7 +65,7 @@ export function Chip({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 border border-border-visible px-3 py-1 font-mono text-[12px] tracking-[0.04em] uppercase ${
+      className={`inline-flex items-center gap-1 border border-border-visible px-3 py-1 font-mono text-[12px] tracking-[0.04em] uppercase transition-colors duration-200 ease-out ${
         technical ? "rounded-[4px]" : "rounded-full"
       } ${active ? "border-display text-display" : "text-secondary"} ${className}`}
     >
@@ -85,7 +85,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-border p-4 md:p-6 ${
+      className={`rounded-2xl border border-border p-4 transition-colors duration-200 ease-out hover:border-border-visible md:p-6 ${
         raised ? "bg-surface-raised" : "bg-surface"
       } ${className}`}
     >
@@ -162,7 +162,10 @@ export function SegmentedProgress({
       )}
       <div className={`flex w-full gap-[2px] ${h}`}>
         {Array.from({ length: segments }).map((_, i) => (
-          <div key={i} className={`flex-1 ${i < filled ? fill : "bg-border"}`} />
+          <div
+            key={i}
+            className={`flex-1 transition-colors duration-200 ease-out ${i < filled ? fill : "bg-border"}`}
+          />
         ))}
       </div>
     </div>
@@ -218,7 +221,7 @@ export function InlineStatus({
   children: ReactNode;
 }) {
   const c = kind === "error" ? "text-accent" : kind === "saved" ? "text-success" : "text-secondary";
-  return <span className={`font-mono text-[12px] tracking-[0.04em] ${c}`}>{children}</span>;
+  return <span className={`nd-in font-mono text-[12px] tracking-[0.04em] ${c}`}>{children}</span>;
 }
 
 export function PageHeader({

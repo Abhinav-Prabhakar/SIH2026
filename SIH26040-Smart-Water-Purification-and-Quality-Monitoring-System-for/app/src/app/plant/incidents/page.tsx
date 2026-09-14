@@ -4,6 +4,7 @@
 // ordered response checklist (secondary), resolved ledger (tertiary).
 
 import { usePlant } from "@/data/PlantProvider";
+import { Loading } from "@/ui/instruments";
 import { ReasonChain } from "@/ui/ReasonChain";
 import { Button, Chip, EmptyState, Label, PageHeader, Value } from "@/ui/primitives";
 
@@ -16,7 +17,7 @@ const STEPS = [
 
 export default function IncidentsPage() {
   const { snapshot, t, acknowledgeIncident } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const active = snapshot.incidents.filter((i) => !i.closedAt);
   const resolved = snapshot.incidents.filter((i) => i.closedAt);

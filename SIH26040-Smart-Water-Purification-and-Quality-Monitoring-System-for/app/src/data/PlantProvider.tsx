@@ -166,15 +166,21 @@ export function PlantProvider({ children }: { children: React.ReactNode }) {
     [publish]
   );
 
-  const setLang = useCallback((l: Lang) => {
-    setLangState(l);
-    persistPrefs({ lang: l, theme: loadPrefs()?.theme ?? "system" });
-  }, []);
+  const setLang = useCallback(
+    (l: Lang) => {
+      setLangState(l);
+      persistPrefs({ lang: l, theme });
+    },
+    [theme]
+  );
 
-  const setTheme = useCallback((th: Prefs["theme"]) => {
-    setThemeState(th);
-    persistPrefs({ lang: loadPrefs()?.lang ?? "en", theme: th });
-  }, []);
+  const setTheme = useCallback(
+    (th: Prefs["theme"]) => {
+      setThemeState(th);
+      persistPrefs({ lang, theme: th });
+    },
+    [lang]
+  );
 
   const value = useMemo<PlantContextValue>(
     () => ({

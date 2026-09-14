@@ -5,11 +5,12 @@
 
 import { usePlant } from "@/data/PlantProvider";
 import { impactMetrics } from "@/domain/impact";
+import { Loading, Rings } from "@/ui/instruments";
 import { Label, PageHeader, SegmentedProgress, StatRow, Value } from "@/ui/primitives";
 
 export default function ImpactPage() {
   const { snapshot, t } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const m = impactMetrics(snapshot.counters);
   const get = (id: string) => m.find((x) => x.id === id)!;
@@ -19,15 +20,35 @@ export default function ImpactPage() {
     <div>
       <PageHeader title={t("impact.title")} meta={t("impact.note")} />
 
-      {/* Primary: hero number */}
-      <section>
-        <Label>{t(safeL.i18nKey)}</Label>
-        <div className="mt-2 font-display text-[56px] leading-none text-display md:text-[72px]">
-          {safeL.value.toLocaleString("en-IN")}
-          <span className="ml-3 font-mono text-[14px] tracking-[0.08em] text-secondary">
-            {safeL.unit}
-          </span>
+      {/* Primary: hero number + concentric system ratios */}
+      <section className="flex flex-wrap items-end justify-between gap-10">
+        <div>
+          <Label>{t(safeL.i18nKey)}</Label>
+          <div className="mt-2 font-display text-[56px] leading-none text-display md:text-[72px]">
+            {safeL.value.toLocaleString("en-IN")}
+            <span className="ml-3 font-mono text-[14px] tracking-[0.08em] text-secondary">
+              {safeL.unit}
+            </span>
+          </div>
         </div>
+        <Rings
+          items={[
+            {
+              label: "SAFE SHARE",
+              fraction: snapshot.counters.litresCertifiedSafe / snapshot.counters.litresTreated,
+              status: "good",
+            },
+            {
+              label: "MEDIA HEALTH",
+              fraction: Math.min(...snapshot.assets.map((a) => a.remainingFraction)),
+            },
+            {
+              label: "REJECT LOAD",
+              fraction: Math.min(1, snapshot.counters.rejectLitres / snapshot.counters.litresTreated),
+              status: "moderate",
+            },
+          ]}
+        />
       </section>
 
       {/* Three axes, three forms */}

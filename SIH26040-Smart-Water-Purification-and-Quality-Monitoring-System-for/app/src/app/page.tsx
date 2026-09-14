@@ -5,8 +5,11 @@
 
 import Link from "next/link";
 import { usePlant } from "@/data/PlantProvider";
+import { BIS_IS_10500, evaluateEvidence } from "@/domain/standards";
+import { SOURCE_PROFILES } from "@/domain/plant";
+import { Loading, Rings, Sparkline } from "@/ui/instruments";
 import { ReleaseBanner } from "@/ui/ReleaseBanner";
-import { Button, Chip, Label, SectionTitle, SegmentedProgress, Value } from "@/ui/primitives";
+import { Button, Card, Chip, Label, SectionTitle, SegmentedProgress, Value } from "@/ui/primitives";
 
 const DIFF_KEYS = [
   "pitch.diff.1",
@@ -24,14 +27,14 @@ export default function PitchPage() {
     <div>
       {/* Hero — the ONE break: Doto headline + thesis */}
       <section className="dot-grid-subtle -mx-4 px-4 pb-16 pt-10 md:-mx-6 md:px-6 md:pb-24 md:pt-16">
-        <Label>SIH26040 · GOVT OF JHARKHAND · CLEAN & GREEN TECH</Label>
-        <h1 className="mt-6 font-display text-[56px] leading-[0.95] tracking-[-0.03em] text-display md:text-[96px]">
+        <div className="nd-in"><Label>SIH26040 · GOVT OF JHARKHAND · CLEAN & GREEN TECH</Label></div>
+        <h1 className="nd-in nd-in-1 mt-6 font-display text-[56px] leading-[0.95] tracking-[-0.03em] text-display md:text-[96px]">
           NEER//OS
         </h1>
-        <p className="mt-6 max-w-2xl font-sans text-[18px] leading-[1.5] text-primary md:text-[24px]">
+        <p className="nd-in nd-in-2 mt-6 max-w-2xl font-sans text-[18px] leading-[1.5] text-primary md:text-[24px]">
           {t("pitch.headline")}
         </p>
-        <p className="mt-4 max-w-xl font-sans text-[14px] leading-[1.5] text-secondary">
+        <p className="nd-in nd-in-3 mt-4 max-w-xl font-sans text-[14px] leading-[1.5] text-secondary">
           {t("pitch.thesis")}
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
@@ -46,6 +49,40 @@ export default function PitchPage() {
 
       {/* Live release banner — product is the demo */}
       <ReleaseBanner />
+
+      {/* Live instrument cluster — rings + a real series */}
+      {snapshot ? (
+        <section className="grid gap-10 md:grid-cols-2">
+          <Rings
+            items={(() => {
+              const src = SOURCE_PROFILES[snapshot.sourceProfile];
+              const freshness = Math.min(
+                ...src.requiredEvidence.map((c) => {
+                  const spec = BIS_IS_10500[c];
+                  const ev = evaluateEvidence(c, snapshot.labEvidence, snapshot.at);
+                  if (!ev.report) return 0;
+                  const horizon = spec.freshnessHorizonDays ?? 30;
+                  return Math.max(0, 1 - ev.ageDays! / horizon);
+                })
+              );
+              return [
+                { label: "EVIDENCE", fraction: freshness, status: freshness < 0.2 ? "over" as const : freshness < 0.4 ? "moderate" as const : "good" as const },
+                { label: "SENSOR TRUST", fraction: Math.min(...snapshot.trust.map((x) => x.score)) },
+                { label: "MEDIA RUL", fraction: snapshot.assets.find((a) => a.assetId === "MEDIA_FE_MN")!.remainingFraction },
+              ];
+            })()}
+          />
+          <Card>
+            <Sparkline
+              label={t("plant.w.turbOut")}
+              values={snapshot.series.find((s) => s.code === "TURBIDITY")!.values}
+              unit="NTU"
+            />
+          </Card>
+        </section>
+      ) : (
+        <Loading text={t("common.loading")} />
+      )}
 
       {/* Problem */}
       <section className="mt-16 grid gap-8 md:mt-24 md:grid-cols-12">

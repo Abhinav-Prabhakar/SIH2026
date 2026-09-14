@@ -46,6 +46,7 @@ interface World extends MutableWorld {
   woStatus: Record<string, WorkOrderStatus>;
   acknowledged: string[];
   eventLog: { tick: number; i18nKey: string }[];
+  releaseTape: import("@/domain/types").ReleaseState[];
   prevRelease: string;
   offline: boolean;
   queued: number;
@@ -116,6 +117,7 @@ export class PlantSim {
       woStatus: {},
       acknowledged: [],
       eventLog: [],
+      releaseTape: [],
       prevRelease: "SAFE",
       offline: false,
       queued: 0,
@@ -238,8 +240,9 @@ export class PlantSim {
       w.counters.litresCertifiedSafe += FLOW_LPH * dtH;
     }
     const feed = w.feedTurbidity;
-    const outlet = snap.live.find((r) => r.code === "TURBIDITY")?.value ?? feed;
-    w.counters.contaminantGramsRemoved += Math.max(0, feed - outlet) * FLOW_LPH * dtH * 0.001;
+    const outletReading = snap.live.find((r) => r.code === "TURBIDITY");
+    if (!outletReading) throw new Error("sim produced no TURBIDITY reading");
+    w.counters.contaminantGramsRemoved += Math.max(0, feed - outletReading.value) * FLOW_LPH * dtH * 0.001;
     w.counters.energyKwh += 1.1 * dtH;
     if (w.tick % 300 === 0 || w.removalEfficiency < 0.4) {
       if (w.tick % 300 === 0) {
@@ -332,6 +335,8 @@ export class PlantSim {
       maintenanceHold: w.maintenanceHold,
       requiredEvidence: src.requiredEvidence,
     });
+    w.releaseTape.push(release.state);
+    if (w.releaseTape.length > 48) w.releaseTape.shift();
 
     const fault = (id: string) =>
       (id === "DISINFECTION" && (!w.chlorineDoseOk || !w.uvOk)) ||
@@ -373,6 +378,12 @@ export class PlantSim {
       scenario: this.scenarioId,
       sourceProfile: src.id,
       live,
+      series: SENSORS.map((s) => ({
+        code: s.parameter,
+        sensorId: s.sensorId,
+        values: (w.history[s.sensorId] ?? []).slice(-24).map((r) => r.value),
+      })),
+      releaseTape: [...w.releaseTape],
       labEvidence: [...w.labReports].sort((a, b) => b.reportedAt - a.reportedAt),
       trust,
       assets,

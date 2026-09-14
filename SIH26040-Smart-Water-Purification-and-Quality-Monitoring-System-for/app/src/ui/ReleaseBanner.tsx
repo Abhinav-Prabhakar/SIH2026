@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { usePlant } from "@/data/PlantProvider";
+import { ValveGlyph } from "./instruments";
 import { Button, Label } from "./primitives";
 import { ReasonChain } from "./ReasonChain";
 
@@ -27,13 +28,16 @@ export function ReleaseBanner({ compact = false }: { compact?: boolean }) {
   return (
     <section className={compact ? "py-6" : "py-10 md:py-16"}>
       <Label>RELEASE GATE · BIS IS 10500</Label>
-      <h2
-        className={`mt-3 font-display leading-none tracking-[-0.02em] ${color} ${
-          compact ? "text-[36px] md:text-[48px]" : "text-[48px] md:text-[72px]"
-        }`}
-      >
-        {t(`release.${state}`)}
-      </h2>
+      <div className="mt-3 flex items-center gap-4 md:gap-6">
+        <ValveGlyph state={state} size={compact ? 44 : 64} />
+        <h2
+          className={`font-display leading-none tracking-[-0.02em] transition-colors duration-300 ease-out ${color} ${
+            compact ? "text-[36px] md:text-[48px]" : "text-[48px] md:text-[72px]"
+          }`}
+        >
+          {t(`release.${state}`)}
+        </h2>
+      </div>
       <p className="mt-4 max-w-xl font-sans text-[16px] leading-[1.5] text-primary">
         {t(`release.${state}.desc`)}
       </p>
@@ -69,7 +73,11 @@ export function ReleaseBanner({ compact = false }: { compact?: boolean }) {
           <Button variant="ghost" onClick={() => setShowWhy(!showWhy)} className="!px-0">
             {t("common.why")} {showWhy ? "▴" : "▾"} · {reasons.length} {t("common.events")}
           </Button>
-          {showWhy && <ReasonChain reasons={reasons} className="mt-2" />}
+          <div className="nd-acc" data-open={showWhy}>
+            <div className="nd-acc-inner">
+              <ReasonChain reasons={reasons} className="mt-2" />
+            </div>
+          </div>
         </div>
       )}
 

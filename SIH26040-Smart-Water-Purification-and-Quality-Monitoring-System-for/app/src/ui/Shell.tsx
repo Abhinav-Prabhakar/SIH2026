@@ -16,6 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { usePlant } from "@/data/PlantProvider";
+import { Loading } from "./instruments";
 import { Label, Value } from "./primitives";
 
 const NAV = [
@@ -39,7 +40,7 @@ function fmtAge(ms: number): string {
 
 function SyncStrip() {
   const { snapshot, t } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
   const c = snapshot.connectivity;
   return (
     <span className="font-mono text-[11px] tracking-[0.06em] uppercase">
@@ -92,11 +93,12 @@ export function Shell({ children }: { children: ReactNode }) {
                 <Link
                   key={n.href}
                   href={n.href}
-                  className={`font-mono text-[11px] tracking-[0.08em] uppercase transition-colors ${
+                  aria-current={active ? "page" : undefined}
+                  className={`nd-navlink font-mono text-[11px] tracking-[0.08em] uppercase ${
                     active ? "text-display" : "text-disabled hover:text-secondary"
                   }`}
                 >
-                  {active ? `[ ${t(n.key)} ]` : t(n.key)}
+                  {t(n.key)}
                 </Link>
               );
             })}
@@ -146,7 +148,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex min-h-14 min-w-14 flex-col items-center justify-center gap-1 px-3 ${
+                className={`flex min-h-14 min-w-14 flex-col items-center justify-center gap-1 px-3 transition-colors duration-200 ease-out ${
                   active ? "text-display" : "text-disabled"
                 }`}
               >
@@ -154,7 +156,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 <span className="font-mono text-[9px] tracking-[0.06em] uppercase">
                   {t(n.key)}
                 </span>
-                {active && <span className="h-1 w-1 rounded-full bg-accent" />}
+                {active && <span className="nd-in h-1 w-1 rounded-full bg-accent" />}
               </Link>
             );
           })}

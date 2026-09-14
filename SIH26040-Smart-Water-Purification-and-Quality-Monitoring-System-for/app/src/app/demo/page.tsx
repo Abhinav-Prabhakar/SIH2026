@@ -4,8 +4,10 @@
 // event timeline (secondary), seed/tick metadata (tertiary).
 
 import { usePlant } from "@/data/PlantProvider";
-import { SCENARIO_IDS } from "@/domain/types";
+import { ReleaseState, SCENARIO_IDS } from "@/domain/types";
 import { SCENARIOS } from "@/sim/scenarios";
+import { Loading, TickTape } from "@/ui/instruments";
+import { SlidingTabs } from "@/ui/SlidingTabs";
 import {
   Button,
   Card,
@@ -22,9 +24,16 @@ const STATE_COLOR: Record<string, string> = {
   MAINTENANCE: "text-secondary",
 };
 
+const TAPE_LABEL: Record<ReleaseState, string> = {
+  SAFE: "SAFE",
+  CONDITIONAL: "COND",
+  HOLD: "HOLD",
+  MAINTENANCE: "MAINT",
+};
+
 export default function DemoPage() {
   const { snapshot, scenario, eventLog, tick, t, selectScenario, resetDemo } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const def = SCENARIOS[scenario];
 
@@ -32,29 +41,21 @@ export default function DemoPage() {
     <div>
       <PageHeader title={t("demo.title")} meta={t("demo.hint")} />
 
-      {/* Scenario selector — segmented chips */}
+      {/* Scenario selector — sliding pill segmented control */}
       <section>
         <Label>{t("demo.select")}</Label>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SCENARIO_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => selectScenario(id)}
-              className={`rounded-[4px] border px-4 py-2.5 font-mono text-[12px] tracking-[0.06em] uppercase transition-colors duration-200 ${
-                id === scenario
-                  ? "border-display bg-display text-canvas"
-                  : "border-border-visible text-secondary hover:text-primary"
-              }`}
-            >
-              {t(SCENARIOS[id].i18nKey)}
-            </button>
-          ))}
+        <div className="mt-3 max-w-full overflow-x-auto pb-1">
+          <SlidingTabs
+            ariaLabel={t("demo.select")}
+            options={SCENARIO_IDS.map((id) => ({ id, label: t(SCENARIOS[id].i18nKey) }))}
+            value={scenario}
+            onChange={(id) => selectScenario(id as typeof scenario)}
+          />
         </div>
         <p className="mt-4 max-w-xl font-sans text-[15px] text-primary">{t(def.blurbI18nKey)}</p>
       </section>
 
-      {/* Current state */}
+      {/* Current state + release tape */}
       <section className="mt-10 flex flex-wrap items-center gap-6">
         <div>
           <Label>{t("demo.currentState")}</Label>
@@ -77,6 +78,21 @@ export default function DemoPage() {
         <Button variant="destructive" onClick={resetDemo}>
           {t("common.reset")}
         </Button>
+      </section>
+
+      {/* Release tape — last 48 ticks as a segmented strip */}
+      <section className="mt-10">
+        <div className="mb-2 flex items-baseline justify-between">
+          <Label>RELEASE TAPE · LAST {snapshot.releaseTape.length} TICKS</Label>
+          <div className="flex gap-4">
+            {(["SAFE", "CONDITIONAL", "HOLD", "MAINTENANCE"] as const).map((s) => (
+              <span key={s} className={`font-mono text-[9px] tracking-[0.06em] ${STATE_COLOR[s]}`}>
+                {TAPE_LABEL[s]}
+              </span>
+            ))}
+          </div>
+        </div>
+        <TickTape tape={snapshot.releaseTape} />
       </section>
 
       {/* Event log */}

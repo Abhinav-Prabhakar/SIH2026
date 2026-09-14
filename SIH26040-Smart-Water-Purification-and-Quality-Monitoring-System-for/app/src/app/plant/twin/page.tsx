@@ -6,15 +6,19 @@
 import { useState } from "react";
 import { usePlant } from "@/data/PlantProvider";
 import { STAGES } from "@/domain/plant";
+import { Loading } from "@/ui/instruments";
 import { Card, Label, PageHeader, Value } from "@/ui/primitives";
 
 export default function TwinPage() {
   const { snapshot, t } = usePlant();
   const [selected, setSelected] = useState<string | null>(null);
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
-  const sel = snapshot.stages.find((s) => s.id === selected) ?? snapshot.stages[snapshot.stages.length - 1];
+  const sel = selected
+    ? snapshot.stages.find((s) => s.id === selected)!
+    : snapshot.stages[snapshot.stages.length - 1];
   const selDef = STAGES.find((d) => d.id === sel.id);
+  if (!selDef) throw new Error(`unknown stage: ${sel.id}`);
 
   return (
     <div>
@@ -43,7 +47,11 @@ export default function TwinPage() {
                 >
                   {t(s.name)}
                 </span>
-                {s.fault && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+                {s.fault ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                ) : (
+                  <span className="nd-blink h-1.5 w-1.5 rounded-full bg-success" />
+                )}
               </div>
               <div className="mt-3 space-y-1">
                 {s.metrics.map((m) => (

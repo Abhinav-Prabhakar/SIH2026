@@ -5,6 +5,7 @@
 
 import { usePlant } from "@/data/PlantProvider";
 import { CALIBRATION_INTERVAL_DAYS } from "@/domain/trust";
+import { Loading } from "@/ui/instruments";
 import { DAY_MS } from "@/domain/types";
 import {
   Button,
@@ -19,7 +20,7 @@ import {
 
 export default function MaintenancePage() {
   const { snapshot, t, setWorkOrderStatus } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const worst = [...snapshot.assets].sort((a, b) => a.remainingFraction - b.remainingFraction)[0];
   const worstPct = Math.round(worst.remainingFraction * 100);

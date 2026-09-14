@@ -5,9 +5,12 @@ export type Lang = "en" | "hi";
 
 const dicts: Record<Lang, Record<I18nKey, string>> = { en, hi };
 
+/** Strict lookup — missing keys render as a loud marker, never a silent fallback. */
 export function translate(lang: Lang, key: I18nKey | string): string {
   const d = dicts[lang] as Record<string, string>;
-  return d[key] ?? (dicts.en as Record<string, string>)[key] ?? key;
+  const v = d[key];
+  if (v === undefined) return `[MISSING I18N: ${key}]`;
+  return v;
 }
 
 export { en, hi };

@@ -5,6 +5,8 @@
 
 import { usePlant } from "@/data/PlantProvider";
 import { evaluateValue, BIS_IS_10500 } from "@/domain/standards";
+import { PlantSnapshot } from "@/domain/types";
+import { Gauge, Loading, Sparkline } from "@/ui/instruments";
 import { ReleaseBanner } from "@/ui/ReleaseBanner";
 import {
   Card,
@@ -14,16 +16,23 @@ import {
   SegmentedProgress,
   StatRow,
   Value,
-  statusColor,
 } from "@/ui/primitives";
 
-function live(snapshot: ReturnType<typeof usePlant>["snapshot"], code: string) {
-  return snapshot?.live.find((r) => r.code === code)?.value;
+function live(snapshot: PlantSnapshot, code: string): number {
+  const r = snapshot.live.find((r) => r.code === code);
+  if (!r) throw new Error(`missing live reading: ${code}`);
+  return r.value;
+}
+
+function series(snapshot: PlantSnapshot, code: string): number[] {
+  const s = snapshot.series.find((s) => s.code === code);
+  if (!s) throw new Error(`missing series: ${code}`);
+  return s.values;
 }
 
 export default function PlantPage() {
   const { snapshot, t, setMaintenanceHold } = usePlant();
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const state = snapshot.release.state;
   const actionKey =
@@ -35,11 +44,18 @@ export default function PlantPage() {
           ? "plant.action.hold"
           : "plant.action.maintenance";
 
-  const cl2 = live(snapshot, "CHLORINE") ?? 0;
+  const cl2 = live(snapshot, "CHLORINE");
   const cl2Status = evaluateValue(BIS_IS_10500.CHLORINE, cl2);
+  const turb = live(snapshot, "TURBIDITY");
+  const turbStatus = evaluateValue(BIS_IS_10500.TURBIDITY, turb);
   const media = snapshot.assets.find((a) => a.assetId === "MEDIA_FE_MN");
+  if (!media) throw new Error("missing asset MEDIA_FE_MN");
   const minTrust = Math.min(...snapshot.trust.map((x) => x.score));
-  const turbIn = snapshot.stages[0]?.metrics.find((m) => m.label === "TURB IN")?.value ?? "—";
+  const turbIn = snapshot.stages[0].metrics.find((m) => m.label === "TURB IN");
+  if (!turbIn) throw new Error("missing intake turbidity metric");
+
+  const seg = (s: "OK" | "WARN" | "FAIL") =>
+    s === "OK" ? ("good" as const) : s === "WARN" ? ("moderate" as const) : ("over" as const);
 
   return (
     <div>
@@ -60,7 +76,7 @@ export default function PlantPage() {
         <p className="font-sans text-[15px] text-primary">{t(actionKey)}</p>
       </div>
 
-      {/* Instrument widgets — varied forms */}
+      {/* Instrument widgets — each a different form */}
       <section className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
         <Card>
           <Label>{t("plant.w.flow")}</Label>
@@ -71,27 +87,24 @@ export default function PlantPage() {
         </Card>
 
         <Card>
-          <Label>{t("plant.w.turbOut")}</Label>
+          <Sparkline
+            label={t("plant.w.turbOut")}
+            values={series(snapshot, "TURBIDITY")}
+            unit="NTU"
+            status={seg(turbStatus)}
+          />
           <div className="mt-3">
-            <Value
-              color={statusColor(evaluateValue(BIS_IS_10500.TURBIDITY, live(snapshot, "TURBIDITY") ?? 0))}
-              className="text-[28px]"
-            >
-              {(live(snapshot, "TURBIDITY") ?? 0).toFixed(2)}
-            </Value>
-            <span className="ml-2 font-mono text-[11px] text-secondary">NTU</span>
-          </div>
-          <div className="mt-3">
-            <StatRow label={t("plant.w.turbIn")} value={turbIn} />
+            <StatRow label={t("plant.w.turbIn")} value={turbIn.value} />
           </div>
         </Card>
 
         <Card>
-          <SegmentedProgress
+          <Gauge
             label={t("plant.w.chlorine")}
-            valueText={`${cl2.toFixed(2)} MG/L`}
-            fraction={Math.min(1, cl2 / 1.0)}
-            status={cl2Status === "OK" ? "good" : cl2Status === "WARN" ? "moderate" : "over"}
+            value={cl2.toFixed(2)}
+            unit="MG/L"
+            fraction={cl2 / 1.0}
+            status={seg(cl2Status)}
           />
           <div className="mt-3">
             <Label>BAND 0.2–1.0 MG/L</Label>
@@ -101,18 +114,18 @@ export default function PlantPage() {
         <Card>
           <SegmentedProgress
             label={t("plant.w.filterRul")}
-            valueText={`${Math.round((media?.remainingFraction ?? 0) * 100)}%`}
-            fraction={media?.remainingFraction ?? 0}
+            valueText={`${Math.round(media.remainingFraction * 100)}%`}
+            fraction={media.remainingFraction}
             status={
-              (media?.remainingFraction ?? 0) < 0.15
+              media.remainingFraction < 0.15
                 ? "over"
-                : (media?.remainingFraction ?? 0) < 0.35
+                : media.remainingFraction < 0.35
                   ? "moderate"
                   : "good"
             }
           />
           <div className="mt-3 space-y-0.5">
-            {(media?.basis ?? []).map((b) => (
+            {media.basis.map((b) => (
               <p key={b} className="font-mono text-[10px] tracking-[0.04em] text-disabled">
                 {b}
               </p>

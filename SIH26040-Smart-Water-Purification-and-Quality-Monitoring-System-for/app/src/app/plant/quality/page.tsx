@@ -14,6 +14,7 @@ import {
   thresholdText,
 } from "@/domain/standards";
 import { LabValue, ParameterCode } from "@/domain/types";
+import { Loading, ParamDotGrid } from "@/ui/instruments";
 import {
   Button,
   Card,
@@ -45,8 +46,9 @@ export default function QualityPage() {
   const [daysAgo, setDaysAgo] = useState("0");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(false);
+  const [shakeCount, setShakeCount] = useState(0);
 
-  if (!snapshot) return <Label>{t("common.loading")}</Label>;
+  if (!snapshot) return <Loading text={t("common.loading")} />;
 
   const onSubmit = () => {
     setSaved(false);
@@ -57,17 +59,29 @@ export default function QualityPage() {
       v = upper;
     } else {
       const num = Number(upper);
-      if (!Number.isFinite(num)) {
+      if (upper === "" || !Number.isFinite(num)) {
         setError(true);
+        setShakeCount((c) => c + 1);
         return;
       }
       v = num;
     }
-    const d = Math.max(0, Number(daysAgo) || 0);
+    const d = Number(daysAgo);
+    if (daysAgo.trim() === "" || !Number.isFinite(d) || d < 0) {
+      setError(true);
+      setShakeCount((c) => c + 1);
+      return;
+    }
+    const lab = labName.trim();
+    if (lab === "") {
+      setError(true);
+      setShakeCount((c) => c + 1);
+      return;
+    }
     submitLabReport({
       parameter: param,
       value: v,
-      lab: labName.trim() || "FIELD KIT",
+      lab,
       sampledAt: snapshot.at - d * 86_400_000,
     });
     setSaved(true);
@@ -80,6 +94,44 @@ export default function QualityPage() {
   return (
     <div>
       <PageHeader title={t("quality.title")} meta="BIS IS 10500:2012 · LIVE PROXY VS LAB-CONFIRMED" />
+
+      {/* Parameter board — dot-matrix status grid */}
+      <section className="mb-12">
+        <ParamDotGrid
+          cells={[
+            ...LIVE_PARAMETERS.map((code) => {
+              const spec = BIS_IS_10500[code];
+              const reading = snapshot.live
+                .filter((r) => r.code === code)
+                .sort((a, b) => b.at - a.at)[0];
+              if (!reading) throw new Error(`missing live reading: ${code}`);
+              const status = evaluateLive(reading);
+              return {
+                code,
+                label: spec.label,
+                status,
+                valueText: `${reading.value}${spec.unit ? ` ${spec.unit}` : ""}`,
+              };
+            }),
+            ...LAB_PARAMETERS.map((code) => {
+              const spec = BIS_IS_10500[code];
+              const ev = evaluateEvidence(code, snapshot.labEvidence, snapshot.at);
+              const v = ev.report?.value;
+              return {
+                code,
+                label: spec.label,
+                status: ev.status,
+                valueText:
+                  v === undefined
+                    ? t("status.MISSING")
+                    : typeof v === "number"
+                      ? `${v}${spec.unit ? ` ${spec.unit}` : ""}`
+                      : v,
+              };
+            }),
+          ]}
+        />
+      </section>
 
       {/* Parameter ledger */}
       <div className="overflow-x-auto">
@@ -113,7 +165,10 @@ export default function QualityPage() {
                 .sort((a, b) => b.at - a.at)[0];
               const status = reading ? evaluateLive(reading) : "MISSING";
               return (
-                <tr key={code} className="border-b border-border">
+                <tr
+                  key={code}
+                  className="border-b border-border transition-colors duration-200 ease-out hover:bg-surface-raised"
+                >
                   <td className="px-4 py-3 font-sans text-[14px] text-primary">{spec.label}</td>
                   <td className="px-4 py-3">
                     <span className="rounded-[4px] border border-border-visible px-2 py-0.5 font-mono text-[10px] uppercase text-secondary">
@@ -138,7 +193,10 @@ export default function QualityPage() {
               const ev = evaluateEvidence(code, snapshot.labEvidence, snapshot.at);
               const v = ev.report?.value;
               return (
-                <tr key={code} className="border-b border-border">
+                <tr
+                  key={code}
+                  className="border-b border-border transition-colors duration-200 ease-out hover:bg-surface-raised"
+                >
                   <td className="px-4 py-3 font-sans text-[14px] text-primary">{spec.label}</td>
                   <td className="px-4 py-3">
                     <span className="rounded-[4px] border border-border-visible px-2 py-0.5 font-mono text-[10px] uppercase text-secondary">
@@ -171,7 +229,7 @@ export default function QualityPage() {
           const spec = BIS_IS_10500[code];
           const ev = evaluateEvidence(code, snapshot.labEvidence, snapshot.at);
           const horizon = spec.freshnessHorizonDays ?? 30;
-          const frac = ev.report ? Math.max(0, 1 - (ev.ageDays ?? horizon) / horizon) : 0;
+          const frac = ev.report ? Math.max(0, 1 - ev.ageDays! / horizon) : 0;
           const status = ev.status === "STALE" || ev.status === "MISSING" ? "over" : frac < 0.3 ? "moderate" : "good";
           return (
             <SegmentedProgress
@@ -188,7 +246,7 @@ export default function QualityPage() {
 
       {/* Lab report submission */}
       <section className="mt-12 max-w-xl">
-        <Card>
+        <Card className={error ? "t-input is-shaking" : ""} key={shakeCount}>
           <Label>{t("quality.submit.title")}</Label>
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <div>
@@ -237,6 +295,7 @@ export default function QualityPage() {
           </div>
         </Card>
       </section>
+
     </div>
   );
 }

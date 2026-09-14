@@ -144,11 +144,19 @@ export interface Incident {
   acknowledged: boolean;
 }
 
+export interface LiveSeries {
+  code: ParameterCode;
+  sensorId: string;
+  values: number[];
+}
+
 export interface PlantSnapshot {
   at: number;
   scenario: ScenarioId;
   sourceProfile: string;
   live: LiveReading[];
+  series: LiveSeries[];
+  releaseTape: ReleaseState[];
   labEvidence: LabReport[];
   trust: SensorTrust[];
   assets: AssetHealth[];
