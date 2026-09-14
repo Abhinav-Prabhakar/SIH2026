@@ -4,8 +4,15 @@ Total: 175 software problem statements, scraped from https://sih.gov.in/sih2026P
 
 Licensed under CC-BY-4.0. Source: Smart India Hackathon (sih.gov.in).
 
-Hardware problem statements have been excluded.
+Hardware problem statements have been excluded from the software table below.
 
+## Featured Hardware Project
+
+**[SIH26040 — Smart Water Purification and Quality Monitoring System for Rural and Mining-Affected Areas](SIH26040-Smart-Water-Purification-and-Quality-Monitoring-System-for/)**
+
+Clean & Green Technology · Government of Jharkhand
+
+This repository is actively developing **NEER//OS**, an explainable operational digital twin and planning package for this hardware challenge.
 
 | S.No. | PS Number | Theme | Organization | Title |
 |---|---|---|---|---|
