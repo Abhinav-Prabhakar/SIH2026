@@ -43,7 +43,7 @@ function SyncStrip() {
   if (!snapshot) return <Loading text={t("common.loading")} />;
   const c = snapshot.connectivity;
   return (
-    <span className="font-mono text-[11px] tracking-[0.06em] uppercase">
+    <span className="font-mono text-[11px] tracking-[0.06em] uppercase whitespace-nowrap">
       {c.online ? (
         <Value color="secondary">
           [ {t("common.online")} · {t("common.synced")} {fmtAge(snapshot.at - c.lastSyncAt)} {t("common.ago")} ]
