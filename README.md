@@ -12,7 +12,7 @@ Hardware problem statements have been excluded from the software table below.
 
 Clean & Green Technology · Government of Jharkhand
 
-This repository is actively developing **NEER//OS**, an explainable operational digital twin and planning package for this hardware challenge.
+This repository contains **NEER//OS** for this hardware challenge — an explainable operational digital twin: product documentation in `docs/` plus a working Next.js prototype in `app/` (see the project `README.md`).
 
 | S.No. | PS Number | Theme | Organization | Title |
 |---|---|---|---|---|

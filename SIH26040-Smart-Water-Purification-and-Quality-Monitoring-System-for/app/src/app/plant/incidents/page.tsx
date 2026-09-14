@@ -28,9 +28,19 @@ export default function IncidentsPage() {
 
       {active.length === 0 && !liveHold ? (
         <EmptyState title={t("incident.none")} hint={t("common.seededDemo")} />
+      ) : active.length === 0 && liveHold ? (
+        <section>
+          <Chip technical className="border-accent text-accent">
+            {t("incident.active")}
+          </Chip>
+          <h2 className="mt-3 font-sans text-[24px] text-display">
+            {t(`release.${snapshot.release.state}`)}
+          </h2>
+          <ReasonChain reasons={snapshot.release.reasons} className="mt-6" />
+        </section>
       ) : (
         <div className="space-y-10">
-          {(active.length > 0 ? active : snapshot.incidents.slice(0, 1)).map((inc) => (
+          {active.map((inc) => (
             <section key={inc.id}>
               <div className="flex flex-wrap items-center gap-3">
                 <Chip technical className={inc.closedAt ? "" : "border-accent text-accent"}>
