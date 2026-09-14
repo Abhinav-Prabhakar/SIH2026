@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* Nothing design tokens — both modes first-class.
+   Light = printed technical manual. Dark = OLED instrument panel.
+   Default follows prefers-color-scheme; [data-theme] is the manual override. */
+
+:root {
+  --black: #f5f5f5;
+  --surface: #ffffff;
+  --surface-raised: #f0f0f0;
+  --border: #e8e8e8;
+  --border-visible: #cccccc;
+  --text-disabled: #999999;
+  --text-secondary: #666666;
+  --text-primary: #1a1a1a;
+  --text-display: #000000;
+  --accent: #d71921;
+  --accent-subtle: rgba(215, 25, 33, 0.15);
+  --success: #4a9e5c;
+  --warning: #d4a843;
+  --interactive: #007aff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --black: #000000;
+    --surface: #111111;
+    --surface-raised: #1a1a1a;
+    --border: #222222;
+    --border-visible: #333333;
+    --text-disabled: #666666;
+    --text-secondary: #999999;
+    --text-primary: #e8e8e8;
+    --text-display: #ffffff;
+    --interactive: #5b9bf6;
+  }
+}
+
+[data-theme="dark"] {
+  --black: #000000;
+  --surface: #111111;
+  --surface-raised: #1a1a1a;
+  --border: #222222;
+  --border-visible: #333333;
+  --text-disabled: #666666;
+  --text-secondary: #999999;
+  --text-primary: #e8e8e8;
+  --text-display: #ffffff;
+  --interactive: #5b9bf6;
+}
+
+@theme inline {
+  --color-canvas: var(--black);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-visible: var(--border-visible);
+  --color-disabled: var(--text-disabled);
+  --color-secondary: var(--text-secondary);
+  --color-primary: var(--text-primary);
+  --color-display: var(--text-display);
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-interactive: var(--interactive);
+  --font-display: var(--font-doto), var(--font-mono-x), monospace;
+  --font-sans: var(--font-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-mono-x), monospace;
+}
+
+html,
+body {
+  background: var(--black);
+  color: var(--text-primary);
+  font-family: var(--font-grotesk), system-ui, sans-serif;
+  transition: background-color 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    color 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Dot-matrix motif — decorative backgrounds only. */
+.dot-grid {
+  background-image: radial-gradient(circle, var(--border-visible) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.dot-grid-subtle {
+  background-image: radial-gradient(circle, var(--border) 0.5px, transparent 0.5px);
+  background-size: 12px 12px;
+}
+
+/* Mechanical ease, opacity-first. */
+.nd-fade {
+  transition: opacity 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+::selection {
+  background: var(--accent);
+  color: #ffffff;
+}
